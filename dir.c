@@ -604,7 +604,7 @@ static int apfs_create_dentry(struct dentry *dentry, struct inode *inode)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 0)
 	parent->i_mtime = parent->i_ctime = current_time(inode);
 #else
-	parent->i_mtime = inode_set_ctime_current(parent);
+	inode_mtime(parent) = inode_set_ctime_current(parent);
 #endif
 	++APFS_I(parent)->i_nchildren;
 	apfs_inode_join_transaction(parent->i_sb, parent);
@@ -1041,7 +1041,7 @@ static int apfs_delete_dentry(struct dentry *dentry)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 0)
 	parent->i_mtime = parent->i_ctime = current_time(parent);
 #else
-	parent->i_mtime = inode_set_ctime_current(parent);
+	inode_mtime(parent) = inode_set_ctime_current(parent);
 #endif
 	--APFS_I(parent)->i_nchildren;
 	apfs_inode_join_transaction(sb, parent);
@@ -1209,7 +1209,7 @@ static int apfs_create_orphan_link(struct inode *inode)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 0)
 	priv_dir->i_mtime = priv_dir->i_ctime = current_time(priv_dir);
 #else
-	priv_dir->i_mtime = inode_set_ctime_current(priv_dir);
+	inode_mtime(priv_dir) = inode_set_ctime_current(priv_dir);
 #endif
 	++APFS_I(priv_dir)->i_nchildren;
 	apfs_inode_join_transaction(sb, priv_dir);
@@ -1258,7 +1258,7 @@ int apfs_delete_orphan_link(struct inode *inode)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 0)
 	priv_dir->i_mtime = priv_dir->i_ctime = current_time(priv_dir);
 #else
-	priv_dir->i_mtime = inode_set_ctime_current(priv_dir);
+	inode_mtime(priv_dir) = inode_set_ctime_current(priv_dir);
 #endif
 	--APFS_I(priv_dir)->i_nchildren;
 	apfs_inode_join_transaction(sb, priv_dir);

@@ -55,7 +55,11 @@ static vm_fault_t apfs_page_mkwrite(struct vm_fault *vmf)
 	}
 
 	if (!page_has_buffers(page))
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0)
 		create_empty_buffers(page, sb->s_blocksize, 0);
+#else
+		create_empty_buffers(page_folio(page), sb->s_blocksize, 0);
+#endif
 
 	size = i_size_read(inode);
 	if (page->index == size >> PAGE_SHIFT)

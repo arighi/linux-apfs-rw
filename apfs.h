@@ -1112,6 +1112,40 @@ apfs_sb_bread(struct super_block *sb, sector_t block)
 	return __bread_gfp(APFS_NXI(sb)->nx_bdev, block, sb->s_blocksize, __GFP_MOVABLE);
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0) /* __getblk_gfp removed in 6.7 */
+/*
+ * __getblk_gfp() will locate (and, if necessary, create) the buffer_head
+ * which corresponds to the passed block_device, block and size. The
+ * returned buffer has its reference count incremented.
+ */
+static inline struct buffer_head *
+__getblk_gfp(struct block_device *bdev, sector_t block,
+	     unsigned size, gfp_t gfp)
+{
+	gfp |= mapping_gfp_constraint(bdev->bd_inode->i_mapping, ~__GFP_FS);
+
+	/*
+	* Prefer looping in the allocator rather than here, at least that
+	* code knows what it's doing.
+	*/
+	gfp |= __GFP_NOFAIL;
+
+	return bdev_getblk(bdev, block, size, gfp);
+}
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)
+/*
+ * i_atime/mtime have been renamed to __i_atime/mtime by
+ * commit 12cd44023651 * ("fs: rename inode i_atime and i_mtime fields")
+ */
+#define inode_atime(__ino) ((__ino)->__i_atime)
+#define inode_mtime(__ino) ((__ino)->__i_mtime)
+#else
+#define inode_atime(__ino) ((__ino)->i_atime)
+#define inode_mtime(__ino) ((__ino)->i_mtime)
+#endif
+
 /* Use instead of apfs_sb_bread() for blocks that will just be overwritten */
 static inline struct buffer_head *
 apfs_getblk(struct super_block *sb, sector_t block)
